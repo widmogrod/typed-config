@@ -37,7 +37,7 @@ type scheme =
 
 type envType = StringMap.t(typ);
 
-let infereRecord = (env: envType, key: string, e: expression) =>
+let infereRecord = (env: envType, key: string, _: expression) =>
   StringMap.fold(
     (k, v, agg) =>
       switch (agg) {
