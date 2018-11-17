@@ -20,7 +20,7 @@ open Typed;
 let env: envType =
   StringMap.(
     empty
-    |> add("_url$", TDefined("_url", TRegexp("#\w+://.+#i")))
+    |> add("_url$", TDefined("_url", TRegexp({|/w+:\/\/.+/i|})))
     |> add("_enabled$", TDefined("_enabled", TLit(LBool)))
     |> add("_password$", TDefined("_password", TPassword))
     |> add("_path$", TDefined("_path", TIO))
