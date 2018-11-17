@@ -1,4 +1,5 @@
 # typed-config
+[![Build Status](https://travis-ci.org/widmogrod/typed-config.svg?branch=master)](https://travis-ci.org/widmogrod/typed-config)
 ## Introduction
 
 Experiment with making configuration type safe, self domummenting, easy to extend and dead-simple to use.
