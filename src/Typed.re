@@ -37,7 +37,7 @@ type scheme =
 
 type envType = StringMap.t(typ);
 
-let infereRecord = (env: envType, key: string, _: expression) =>
+let infereKeyType = (env: envType, key: string) =>
   StringMap.fold(
     (k, v, agg) =>
       switch (agg) {
@@ -62,7 +62,7 @@ let rec typeInference = (env: envType, e: expression) =>
     TRecord(
       StringMap.mapi(
         (k, v) => {
-          let x = infereRecord(env, k, v);
+          let x = infereKeyType(env, k);
           switch (x) {
           | None =>
             Js.log2({|Cannot find type for key=|}, k);
