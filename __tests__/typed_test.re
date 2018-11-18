@@ -17,10 +17,13 @@ open Typed;
 
   */
 
+/* https://gist.github.com/curtisz/11139b2cfcaef4a261e0 */
+let urlRegexp = {|^(([^:/?#]+):)?(\/\/([^/?#]*))?([^?#]*)(\\?([^#]*))?(#(.*))?|};
+
 let env: envType =
   StringMap.(
     empty
-    |> add("_url$", TDefined("_url", TRegexp({|/w+:\/\/.+/i|})))
+    |> add("_url$", TDefined("_url", TRegexp(urlRegexp)))
     |> add("_enabled$", TDefined("_enabled", TLit(LBool)))
     |> add("_password$", TDefined("_password", TPassword))
     |> add("_path$", TDefined("_path", TIO))
@@ -43,7 +46,12 @@ let e1 =
   EObject(
     StringMap.(
       empty
-      |> add("postgres_url", EString("tcp://postgress@postgress:postgress/"))
+      |> add(
+           "postgres_url",
+           EString(
+             "postgres://dbuser:dbpass@database:5432/srv_user_purchased_product?sslmode=disable",
+           ),
+         )
     ),
   );
 

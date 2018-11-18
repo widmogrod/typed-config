@@ -37,46 +37,6 @@ type scheme =
 
 type envType = StringMap.t(typ);
 
-let infereKeyType = (env: envType, key: string) =>
-  StringMap.fold(
-    (k, v, agg) =>
-      switch (agg) {
-      | None =>
-        if (Js.Re.(test(key, fromString(k)))) {
-          Some(v);
-        } else {
-          None;
-        }
-      | Some(_) => agg
-      },
-    env,
-    None,
-  );
-
-let rec typeInference = (env: envType, e: expression) =>
-  switch (e) {
-  | EFalse => TLit(LBool)
-  | ETrue => TLit(LBool)
-  | EString(v) => TLit(LString(v))
-  | EObject(map) =>
-    TRecord(
-      StringMap.mapi(
-        (k, v) => {
-          let x = infereKeyType(env, k);
-          switch (x) {
-          | None =>
-            Js.log2({|Cannot find type for key=|}, k);
-            typeInference(env, e);
-          | Some(t) => t
-          };
-        },
-        map,
-      ),
-    )
-  };
-
-let (++) = (a, b) => Format.sprintf({|%s%s|}, a, b);
-
 let rec showType = t =>
   switch (t) {
   | TIO => "io"
@@ -100,3 +60,63 @@ let rec showType = t =>
       ),
     )
   };
+
+let infereKeyType = (env: envType, key: string) =>
+  StringMap.fold(
+    (k, v, agg) =>
+      switch (agg) {
+      | None =>
+        if (Js.Re.(test(key, fromString(k)))) {
+          Some(v);
+        } else {
+          None;
+        }
+      | Some(_) => agg
+      },
+    env,
+    None,
+  );
+
+let rec doesValueMatchType = (v: expression, t: typ) =>
+  switch (v, t) {
+  | (_, TDefined(_, t)) => doesValueMatchType(v, t)
+  | (EString(str), TRegexp(regexp)) =>
+    if (Js.Re.(test(str, fromString(regexp)))) {
+      true;
+    } else {
+      Js.log3({|value does not match type|}, str, regexp);
+      false;
+    }
+  | (ETrue, TLit(LBool)) => true
+  | (EFalse, TLit(LBool)) => true
+  /* | (EString, TIO) =>  */
+  | _ =>
+    Js.log3({|unknown type matching|}, v, showType(t));
+    false;
+  };
+
+let rec typeInference = (env: envType, e: expression) =>
+  switch (e) {
+  | EFalse => TLit(LBool)
+  | ETrue => TLit(LBool)
+  | EString(v) => TLit(LString(v))
+  | EObject(map) =>
+    TRecord(
+      StringMap.mapi(
+        (k, v) => {
+          let x = infereKeyType(env, k);
+          switch (x) {
+          | None =>
+            Js.log2({|Cannot find type for key=|}, k);
+            typeInference(env, e);
+          | Some(t) =>
+            doesValueMatchType(v, t);
+            t;
+          };
+        },
+        map,
+      ),
+    )
+  };
+
+let (++) = (a, b) => Format.sprintf({|%s%s|}, a, b);
