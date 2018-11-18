@@ -83,7 +83,7 @@ let r4 = {|{distributed_tracing_type = _tracing_type of sum [jaeger of string, s
 let e5 =
   EObject(
     StringMap.(
-      empty |> add("icon_path", EString("./path/to/local/file.png"))
+      empty |> add("icon_path", EString("./__tests__/typed_test.re"))
     ),
   );
 let r5 = {|{icon_path = _path of io}|};

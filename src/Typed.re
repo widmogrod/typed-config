@@ -89,7 +89,10 @@ let rec doesValueMatchType = (v: expression, t: typ) =>
     }
   | (ETrue, TLit(LBool)) => true
   | (EFalse, TLit(LBool)) => true
-  /* | (EString, TIO) =>  */
+  | (EString(path), TIO) => Node.Fs.existsSync(path)
+  | (EString(pass), TPassword) =>
+    /* TODO proof of concept*/
+    String.length(pass) > 5
   | _ =>
     Js.log3({|unknown type matching|}, v, showType(t));
     false;
@@ -110,7 +113,9 @@ let rec typeInference = (env: envType, e: expression) =>
             Js.log2({|Cannot find type for key=|}, k);
             typeInference(env, e);
           | Some(t) =>
-            doesValueMatchType(v, t);
+            if (!doesValueMatchType(v, t)) {
+              Js.log3({|Type invalid: |}, v, showType(t));
+            };
             t;
           };
         },
