@@ -80,6 +80,11 @@ let infereKeyType = (env: envType, key: string) =>
 let rec doesValueMatchType = (v: expression, t: typ) =>
   switch (v, t) {
   | (_, TDefined(_, t)) => doesValueMatchType(v, t)
+  | (ETrue, TLit(LBool)) => true
+  | (EFalse, TLit(LBool)) => true
+  | (EString(path), TIO) => Node.Fs.existsSync(path)
+  | (EString(pass), TPassword) => String.length(pass) > 5
+  | (EString(str), TLit(LString(expected))) => str == expected
   | (EString(str), TRegexp(regexp)) =>
     if (Js.Re.(test(str, fromString(regexp)))) {
       true;
@@ -87,12 +92,7 @@ let rec doesValueMatchType = (v: expression, t: typ) =>
       Js.log3({|value does not match type|}, str, regexp);
       false;
     }
-  | (ETrue, TLit(LBool)) => true
-  | (EFalse, TLit(LBool)) => true
-  | (EString(path), TIO) => Node.Fs.existsSync(path)
-  | (EString(pass), TPassword) =>
-    /* TODO proof of concept*/
-    String.length(pass) > 5
+  | (_, TSum(a, b)) => doesValueMatchType(v, a) || doesValueMatchType(v, b)
   | _ =>
     Js.log3({|unknown type matching|}, v, showType(t));
     false;
