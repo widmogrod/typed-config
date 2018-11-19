@@ -7,7 +7,7 @@ module StringMap = Map.Make(StringOrd);
 
 type expression =
   | EObject(StringMap.t(expression))
-  /* | EArray(list(expression)) */
+  | EArray(list(expression))
   | EString(string)
   /* | ENumber */
   | ETrue
@@ -18,7 +18,8 @@ type typ =
   /* | TBool */
   /* | TNumber */
   | TIO
-  /* | TList */
+  | TVar
+  | TList(typ)
   /* | TDate */
   /* | TSet */
   | TPassword
@@ -45,11 +46,13 @@ let rec showType = t =>
     switch (l) {
     | LInt => "int"
     | LBool => "bool"
-    | LString(v) => v ++ {| of string|}
+    | LString(v) => {|"|} ++ v ++ {|"|} ++ {| of string|}
     }
   | TSum(a, b) => {|sum [|} ++ showType(a) ++ {|, |} ++ showType(b) ++ {|]|}
   | TDefined(definedType, o) => definedType ++ {| of |} ++ showType(o)
   | TRegexp(_) => "regexp"
+  | TVar => "of var type!"
+  | TList(t) => "[] of " ++ showType(t)
   | TRecord(map) =>
     Format.sprintf(
       "{%s}",
@@ -103,6 +106,7 @@ let rec typeInference = (env: envType, e: expression) =>
   | EFalse => TLit(LBool)
   | ETrue => TLit(LBool)
   | EString(v) => TLit(LString(v))
+  | EArray(list) => TList(collectTypes(env, list))
   | EObject(map) =>
     TRecord(
       StringMap.mapi(
@@ -122,6 +126,20 @@ let rec typeInference = (env: envType, e: expression) =>
         map,
       ),
     )
-  };
+  }
+and collectTypes = (env: envType, ls: list(expression)) => {
+  let types =
+    List.fold_right((a, agg) => [typeInference(env, a), ...agg], ls, []);
+  let rec red = xs =>
+    switch (xs) {
+    | [x, ...xs] =>
+      switch (xs) {
+      | [] => x
+      | _ => TSum(x, red(xs))
+      }
+    | [] => TVar
+    };
 
+  red(types);
+};
 let (++) = (a, b) => Format.sprintf({|%s%s|}, a, b);
