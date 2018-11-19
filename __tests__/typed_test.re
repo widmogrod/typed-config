@@ -77,7 +77,7 @@ let e4 =
       empty |> add("distributed_tracing_type", EString("opentracing"))
     ),
   );
-let r4 = {|{distributed_tracing_type = _tracing_type of sum [jaeger of string, sum [opentracing of string, none of string]]}|};
+let r4 = {|{distributed_tracing_type = _tracing_type of sum ["jaeger" of string, sum ["opentracing" of string, "none" of string]]}|};
 
 /** File type */
 let e5 =
@@ -88,10 +88,16 @@ let e5 =
   );
 let r5 = {|{icon_path = _path of io}|};
 
+let e6 = EArray([EFalse]);
+let r6 = {|[] of bool|};
+
+/* let e7 = EArray([EFalse, ETrue]);
+   let r7 = {|[] of bool|}; */
+
 let () =
   testAll(
     "Typed.typeInference",
-    [(e1, r1), (e2, r2), (e3, r3), (e4, r4), (e5, r5)],
+    [(e1, r1), (e2, r2), (e3, r3), (e4, r4), (e5, r5), (e6, r6)],
     ((expr, xa)) =>
     Expect.(typeInference(env, expr) |> showType |> expect |> toBe(xa))
   );
