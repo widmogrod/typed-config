@@ -94,6 +94,9 @@ let r6 = {|[] of bool|};
 let e7 = EArray([EArray([EFalse, ETrue])]);
 let r7 = {|[] of [] of bool|};
 
+/* let e8 = EArray([EString("a"), ETrue]);
+   let r8 = {|[] of sum [string | bool]|}; */
+
 let () =
   testAll(
     "Typed.typeInference",
