@@ -88,11 +88,8 @@ let e5 =
   );
 let r5 = {|{icon_path = _path of io}|};
 
-let e6 = EArray([EFalse]);
+let e6 = EArray([EFalse, ETrue]);
 let r6 = {|[] of bool|};
-
-/* let e7 = EArray([EFalse, ETrue]);
-   let r7 = {|[] of bool|}; */
 
 let () =
   testAll(

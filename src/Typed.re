@@ -33,6 +33,37 @@ and lit =
   | LBool
   | LString(string); /* This should be more like atom/const */
 
+module TypeSetOrd = {
+  type t = typ;
+  let rec compare = (a: typ, b: typ) =>
+    switch (a, b) {
+    | (TLit(LInt), TLit(LInt)) => 0
+    | (TLit(LBool), TLit(LBool)) => 0
+    | (TLit(LString(a)), TLit(LString(b))) => String.compare(a, b)
+    | (TIO, TIO) => 0
+    | (TVar, TVar) => 0
+    | (TList(a), TList(b)) => compare(a, b)
+    | (TSum(a1, a2), TSum(b1, b2)) =>
+      let cmp = compare(a1, b1);
+      if (cmp === 0) {
+        compare(a2, b2);
+      } else {
+        cmp;
+      };
+    | (TRegexp(a), TRegexp(b)) => String.compare(a, b)
+    | (TDefined(an, at), TDefined(bn, bt)) =>
+      let cmp = String.compare(an, bn);
+      if (cmp === 0) {
+        compare(at, bt);
+      } else {
+        cmp;
+      };
+    | _ => (-1)
+    };
+};
+
+module TypeSet = Set.Make(TypeSetOrd);
+
 type scheme =
   | Scheme(list(string), typ);
 
@@ -129,7 +160,11 @@ let rec typeInference = (env: envType, e: expression) =>
   }
 and collectTypes = (env: envType, ls: list(expression)) => {
   let types =
-    List.fold_right((a, agg) => [typeInference(env, a), ...agg], ls, []);
+    List.fold_right(
+      (a, agg) => TypeSet.(agg |> add(typeInference(env, a))),
+      ls,
+      TypeSet.empty,
+    );
   let rec red = xs =>
     switch (xs) {
     | [x, ...xs] =>
@@ -140,6 +175,6 @@ and collectTypes = (env: envType, ls: list(expression)) => {
     | [] => TVar
     };
 
-  red(types);
+  red(TypeSet.elements(types));
 };
 let (++) = (a, b) => Format.sprintf({|%s%s|}, a, b);
