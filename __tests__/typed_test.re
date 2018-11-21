@@ -88,16 +88,27 @@ let e5 =
   );
 let r5 = {|{icon_path = _path of io}|};
 
-let e6 = EArray([EFalse]);
+let e6 = EArray([EFalse, ETrue]);
 let r6 = {|[] of bool|};
 
-/* let e7 = EArray([EFalse, ETrue]);
-   let r7 = {|[] of bool|}; */
+let e7 = EArray([EArray([EFalse, ETrue])]);
+let r7 = {|[] of [] of bool|};
+
+/* let e8 = EArray([EString("a"), ETrue]);
+   let r8 = {|[] of sum [string | bool]|}; */
 
 let () =
   testAll(
     "Typed.typeInference",
-    [(e1, r1), (e2, r2), (e3, r3), (e4, r4), (e5, r5), (e6, r6)],
+    [
+      (e1, r1),
+      (e2, r2),
+      (e3, r3),
+      (e4, r4),
+      (e5, r5),
+      (e6, r6),
+      (e7, r7),
+    ],
     ((expr, xa)) =>
     Expect.(typeInference(env, expr) |> showType |> expect |> toBe(xa))
   );
