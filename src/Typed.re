@@ -39,7 +39,8 @@ module TypeSetOrd = {
     switch (a, b) {
     | (TLit(LInt), TLit(LInt)) => 0
     | (TLit(LBool), TLit(LBool)) => 0
-    | (TLit(LString(a)), TLit(LString(b))) => String.compare(a, b)
+    /* | (TLit(LString(a)), TLit(LString(b))) => String.compare(a, b) */
+    | (TLit(LString(_)), TLit(LString(_))) => 0
     | (TIO, TIO) => 0
     | (TVar, TVar) => 0
     | (TList(a), TList(b)) => compare(a, b)
