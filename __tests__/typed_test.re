@@ -109,6 +109,10 @@ let e9 =
   ]);
 let r9 = {|[] of sum [string, sum [bool, {icon_path = _path of io}]]|};
 
+/* let e10 =
+     EObject(StringMap.(empty |> add("icon_path", EString("./some-rubish"))));
+   let r10 = {|"Invalid type: file not exists"|}; */
+
 let () =
   testAll(
     "Typed.typeInference",
