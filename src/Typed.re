@@ -25,13 +25,14 @@ type typ =
   | TPassword
   | TRecord(StringMap.t(typ))
   | TLit(lit)
+  | TConst(string)
   | TSum(typ, typ)
   | TRegexp(string)
   | TDefined(string, typ)
 and lit =
   | LInt
   | LBool
-  | LString(string); /* This should be more like atom/const */
+  | LString;
 
 module TypeSetOrd = {
   type t = typ;
@@ -78,8 +79,9 @@ let rec showType = t =>
     switch (l) {
     | LInt => "int"
     | LBool => "bool"
-    | LString(v) => {|"|} ++ v ++ {|"|} ++ {| of string|}
+    | LString => "string"
     }
+  | TConst(v) => {|"|} ++ v ++ {|"|} ++ {| of string|}
   | TSum(a, b) => {|sum [|} ++ showType(a) ++ {|, |} ++ showType(b) ++ {|]|}
   | TDefined(definedType, o) => definedType ++ {| of |} ++ showType(o)
   | TRegexp(_) => "regexp"
@@ -117,9 +119,10 @@ let rec doesValueMatchType = (v: expression, t: typ) =>
   | (_, TDefined(_, t)) => doesValueMatchType(v, t)
   | (ETrue, TLit(LBool)) => true
   | (EFalse, TLit(LBool)) => true
+  | (EString(_), TLit(LString)) => true
   | (EString(path), TIO) => Node.Fs.existsSync(path)
   | (EString(pass), TPassword) => String.length(pass) > 5
-  | (EString(str), TLit(LString(expected))) => str == expected
+  | (EString(str), TConst(expected)) => str == expected
   | (EString(str), TRegexp(regexp)) =>
     if (Js.Re.(test(str, fromString(regexp)))) {
       true;
@@ -137,7 +140,7 @@ let rec typeInference = (env: envType, e: expression) =>
   switch (e) {
   | EFalse => TLit(LBool)
   | ETrue => TLit(LBool)
-  | EString(v) => TLit(LString(v))
+  | EString(_) => TLit(LString)
   | EArray(list) => TList(collectTypes(env, list))
   | EObject(map) =>
     TRecord(
