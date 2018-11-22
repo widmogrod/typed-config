@@ -32,8 +32,8 @@ let env: envType =
          TDefined(
            "_tracing_type",
            TSum(
-             TLit(LString("jaeger")),
-             TSum(TLit(LString("opentracing")), TLit(LString("none"))),
+             TConst("jaeger"),
+             TSum(TConst("opentracing"), TConst("none")),
            ),
          ),
        )
