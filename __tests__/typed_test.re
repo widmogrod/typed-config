@@ -94,8 +94,8 @@ let r6 = {|[] of bool|};
 let e7 = EArray([EArray([EFalse, ETrue])]);
 let r7 = {|[] of [] of bool|};
 
-/* let e8 = EArray([EString("a"), ETrue]);
-   let r8 = {|[] of sum [string | bool]|}; */
+let e8 = EArray([EString("a"), ETrue]);
+let r8 = {|[] of sum [string, bool]|};
 
 let () =
   testAll(
@@ -108,6 +108,7 @@ let () =
       (e5, r5),
       (e6, r6),
       (e7, r7),
+      (e8, r8),
     ],
     ((expr, xa)) =>
     Expect.(typeInference(env, expr) |> showType |> expect |> toBe(xa))
