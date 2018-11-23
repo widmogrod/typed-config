@@ -32,8 +32,8 @@ let env: envType =
          TDefined(
            "_tracing_type",
            TSum(
-             TLit(LString("jaeger")),
-             TSum(TLit(LString("opentracing")), TLit(LString("none"))),
+             TConst("jaeger"),
+             TSum(TConst("opentracing"), TConst("none")),
            ),
          ),
        )
@@ -94,8 +94,24 @@ let r6 = {|[] of bool|};
 let e7 = EArray([EArray([EFalse, ETrue])]);
 let r7 = {|[] of [] of bool|};
 
-/* let e8 = EArray([EString("a"), ETrue]);
-   let r8 = {|[] of sum [string | bool]|}; */
+let e8 = EArray([EString("a"), ETrue]);
+let r8 = {|[] of sum [string, bool]|};
+
+let e9 =
+  EArray([
+    EString("a"),
+    ETrue,
+    EObject(
+      StringMap.(
+        empty |> add("icon_path", EString("./__tests__/typed_test.re"))
+      ),
+    ),
+  ]);
+let r9 = {|[] of sum [string, sum [bool, {icon_path = _path of io}]]|};
+
+/* let e10 =
+     EObject(StringMap.(empty |> add("icon_path", EString("./some-rubish"))));
+   let r10 = {|"Invalid type: file not exists"|}; */
 
 let () =
   testAll(
@@ -108,6 +124,8 @@ let () =
       (e5, r5),
       (e6, r6),
       (e7, r7),
+      (e8, r8),
+      (e9, r9),
     ],
     ((expr, xa)) =>
     Expect.(typeInference(env, expr) |> showType |> expect |> toBe(xa))
