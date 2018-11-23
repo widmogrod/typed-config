@@ -36,12 +36,23 @@ and lit =
 
 module TypeSetOrd = {
   type t = typ;
+
+  let b2i = a =>
+    switch (a) {
+    | false => (-1)
+    | true => 0
+    };
+  let i2b = a =>
+    switch (a) {
+    | 0 => true
+    | _ => false
+    };
+
   let rec compare = (a: typ, b: typ) =>
     switch (a, b) {
     | (TLit(LInt), TLit(LInt)) => 0
     | (TLit(LBool), TLit(LBool)) => 0
-    /* | (TLit(LString(a)), TLit(LString(b))) => String.compare(a, b) */
-    | (TLit(LString(_)), TLit(LString(_))) => 0
+    | (TLit(LString), TLit(LString)) => 0
     | (TIO, TIO) => 0
     | (TVar, TVar) => 0
     | (TList(a), TList(b)) => compare(a, b)
@@ -60,6 +71,8 @@ module TypeSetOrd = {
       } else {
         cmp;
       };
+    | (TRecord(ax), TRecord(bx)) =>
+      StringMap.equal((a, b) => compare(a, b) |> i2b, ax, bx) |> b2i
     | _ => (-1)
     };
 };
