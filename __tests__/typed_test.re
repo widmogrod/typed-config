@@ -112,6 +112,18 @@ let r9 = {|[] of sum [string, sum [bool, {icon_path = _path of io}]]|};
 /* let e10 =
      EObject(StringMap.(empty |> add("icon_path", EString("./some-rubish"))));
    let r10 = {|"Invalid type: file not exists"|}; */
+/* let m1 =
+     EObject(
+       StringMap.(
+         empty |> add("icon_path", EString("./__tests__/typed_test.re"))
+       ),
+     );
+   let m2 = EObject(StringMap.(empty |> add("market_enabled", ETrue)));
+   let m3 = EObject(StringMap.(empty |> add("market_enabled", ETrue)));
+
+   let e8 = EArray([m1, m2, m3]);
+   let r8 = {|[] of sum [string | bool]|}; */
+
 
 let () =
   testAll(
@@ -124,8 +136,12 @@ let () =
       (e5, r5),
       (e6, r6),
       (e7, r7),
+<<<<<<< HEAD
       (e8, r8),
       (e9, r9),
+=======
+      /* (e8, r8), */
+>>>>>>> map of a map test case
     ],
     ((expr, xa)) =>
     Expect.(typeInference(env, expr) |> showType |> expect |> toBe(xa))
