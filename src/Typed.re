@@ -194,4 +194,3 @@ and collectTypes = (env: envType, ls: list(expression)) => {
 
   red(TypeSet.elements(types));
 };
-let (++) = (a, b) => Format.sprintf({|%s%s|}, a, b);
