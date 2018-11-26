@@ -1,9 +1,4 @@
-module StringOrd = {
-  type t = string;
-  let compare = String.compare;
-};
-
-module StringMap = Map.Make(StringOrd);
+module StringMap = Map.Make(String);
 
 type expression =
   | EObject(StringMap.t(expression))
@@ -14,102 +9,12 @@ type expression =
   | EFalse;
 /* | ENull; */
 
-type typ =
-  /* | TBool */
-  /* | TNumber */
-  | TIO
-  | TVar
-  | TList(typ)
-  /* | TDate */
-  /* | TSet */
-  | TPassword
-  | TRecord(StringMap.t(typ))
-  | TLit(lit)
-  | TConst(string)
-  | TSum(typ, typ)
-  | TRegexp(string)
-  | TDefined(string, typ)
-and lit =
-  | LInt
-  | LBool
-  | LString;
-
-module TypeSetOrd = {
-  type t = typ;
-
-  let b2i = a =>
-    switch (a) {
-    | false => (-1)
-    | true => 0
-    };
-  let i2b = a =>
-    switch (a) {
-    | 0 => true
-    | _ => false
-    };
-
-  let rec compare = (a: typ, b: typ) =>
-    switch (a, b) {
-    | (TLit(LInt), TLit(LInt)) => 0
-    | (TLit(LBool), TLit(LBool)) => 0
-    | (TLit(LString), TLit(LString)) => 0
-    | (TIO, TIO) => 0
-    | (TVar, TVar) => 0
-    | (TList(a), TList(b)) => compare(a, b)
-    | (TSum(a1, a2), TSum(b1, b2)) =>
-      let cmp = compare(a1, b1);
-      if (cmp === 0) {
-        compare(a2, b2);
-      } else {
-        cmp;
-      };
-    | (TRegexp(a), TRegexp(b)) => String.compare(a, b)
-    | (TDefined(an, at), TDefined(bn, bt)) =>
-      let cmp = String.compare(an, bn);
-      if (cmp === 0) {
-        compare(at, bt);
-      } else {
-        cmp;
-      };
-    | (TRecord(ax), TRecord(bx)) =>
-      StringMap.equal((a, b) => compare(a, b) |> i2b, ax, bx) |> b2i
-    | _ => (-1)
-    };
-};
-
-module TypeSet = Set.Make(TypeSetOrd);
+module TypeSet = Set.Make(TT);
 
 type scheme =
-  | Scheme(list(string), typ);
+  | Scheme(list(string), TT.typ);
 
-type envType = StringMap.t(typ);
-
-let rec showType = t =>
-  switch (t) {
-  | TIO => "io"
-  | TPassword => "password"
-  | TLit(l) =>
-    switch (l) {
-    | LInt => "int"
-    | LBool => "bool"
-    | LString => "string"
-    }
-  | TConst(v) => {|"|} ++ v ++ {|"|} ++ {| of string|}
-  | TSum(a, b) => {|sum [|} ++ showType(a) ++ {|, |} ++ showType(b) ++ {|]|}
-  | TDefined(definedType, o) => definedType ++ {| of |} ++ showType(o)
-  | TRegexp(_) => "regexp"
-  | TVar => "of var type!"
-  | TList(t) => "[] of " ++ showType(t)
-  | TRecord(map) =>
-    Format.sprintf(
-      "{%s}",
-      StringMap.fold(
-        (k, v, agg) => agg ++ k ++ {| = |} ++ showType(v),
-        map,
-        "",
-      ),
-    )
-  };
+type envType = StringMap.t(TT.typ);
 
 let infereKeyType = (env: envType, key: string) =>
   StringMap.fold(
@@ -127,16 +32,16 @@ let infereKeyType = (env: envType, key: string) =>
     None,
   );
 
-let rec doesValueMatchType = (v: expression, t: typ) =>
+let rec doesValueMatchType = (v: expression, t: TT.typ) =>
   switch (v, t) {
   | (_, TDefined(_, t)) => doesValueMatchType(v, t)
-  | (ETrue, TLit(LBool)) => true
-  | (EFalse, TLit(LBool)) => true
-  | (EString(_), TLit(LString)) => true
-  | (EString(path), TIO) => Node.Fs.existsSync(path)
-  | (EString(pass), TPassword) => String.length(pass) > 5
-  | (EString(str), TConst(expected)) => str == expected
-  | (EString(str), TRegexp(regexp)) =>
+  | (ETrue, TT.TLit(TT.LBool)) => true
+  | (EFalse, TT.TLit(TT.LBool)) => true
+  | (EString(_), TT.TLit(TT.LString)) => true
+  | (EString(path), TT.TIO) => Node.Fs.existsSync(path)
+  | (EString(pass), TT.TPassword) => String.length(pass) > 5
+  | (EString(str), TT.TConst(expected)) => str == expected
+  | (EString(str), TT.TRegexp(regexp)) =>
     if (Js.Re.(test(str, fromString(regexp)))) {
       true;
     } else {
@@ -145,18 +50,18 @@ let rec doesValueMatchType = (v: expression, t: typ) =>
     }
   | (_, TSum(a, b)) => doesValueMatchType(v, a) || doesValueMatchType(v, b)
   | _ =>
-    Js.log3({|unknown type matching|}, v, showType(t));
+    Js.log3({|unknown type matching|}, v, TT.showType(t));
     false;
   };
 
 let rec typeInference = (env: envType, e: expression) =>
   switch (e) {
-  | EFalse => TLit(LBool)
-  | ETrue => TLit(LBool)
-  | EString(_) => TLit(LString)
-  | EArray(list) => TList(collectTypes(env, list))
+  | EFalse => TT.TLit(TT.LBool)
+  | ETrue => TT.TLit(TT.LBool)
+  | EString(_) => TT.TLit(TT.LString)
+  | EArray(list) => TT.TList(collectTypes(env, list))
   | EObject(map) =>
-    TRecord(
+    TT.TRecord(
       StringMap.mapi(
         (k, v) => {
           let x = infereKeyType(env, k);
@@ -166,7 +71,7 @@ let rec typeInference = (env: envType, e: expression) =>
             typeInference(env, e);
           | Some(t) =>
             if (!doesValueMatchType(v, t)) {
-              Js.log3({|Type invalid: |}, v, showType(t));
+              Js.log3({|Type invalid: |}, v, TT.showType(t));
             };
             t;
           };
@@ -187,9 +92,9 @@ and collectTypes = (env: envType, ls: list(expression)) => {
     | [x, ...xs] =>
       switch (xs) {
       | [] => x
-      | _ => TSum(x, red(xs))
+      | _ => TT.TSum(x, red(xs))
       }
-    | [] => TVar
+    | [] => TT.TVar
     };
 
   red(TypeSet.elements(types));
