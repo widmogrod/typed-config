@@ -12,9 +12,9 @@ type expression =
 module TypeSet = Set.Make(TT);
 
 type scheme =
-  | Scheme(list(string), typ);
+  | Scheme(list(string), TT.t);
 
-type envType = StringMap.t(typ);
+type envType = StringMap.t(TT.t);
 
 let infereKeyType = (env: envType, key: string) =>
   StringMap.fold(
@@ -32,7 +32,7 @@ let infereKeyType = (env: envType, key: string) =>
     None,
   );
 
-let rec doesValueMatchType = (v: expression, t: typ) =>
+let rec doesValueMatchType = (v: expression, t: TT.t) =>
   switch (v, t) {
   | (_, TDefined(_, t)) => doesValueMatchType(v, t)
   | (ETrue, TLit(LBool)) => true
