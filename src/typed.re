@@ -1,5 +1,4 @@
 open TT;
-module StringMap = Map.Make(String);
 
 type expression =
   | EObject(StringMap.t(expression))
