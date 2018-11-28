@@ -1,20 +1,20 @@
 module StringMap = Map.Make(String);
 
-type typ =
+type expr =
   /* | TBool */
   /* | TNumber */
   | TIO
   | TVar
-  | TList(typ)
+  | TList(expr)
   /* | TDate */
   /* | TSet */
   | TPassword
-  | TRecord(StringMap.t(typ))
+  | TRecord(StringMap.t(expr))
   | TLit(lit)
   | TConst(string)
-  | TSum(typ, typ)
+  | TSum(expr, expr)
   | TRegexp(string)
-  | TDefined(string, typ)
+  | TDefined(string, expr)
 and lit =
   | LInt
   | LBool
@@ -47,7 +47,7 @@ let rec showType = t =>
     )
   };
 
-type t = typ;
+type t = expr;
 
 let b2i = a =>
   switch (a) {
@@ -60,7 +60,7 @@ let i2b = a =>
   | _ => false
   };
 
-let rec compare = (a: typ, b: typ) =>
+let rec compare = (a: expr, b: expr) =>
   switch (a, b) {
   | (TLit(LInt), TLit(LInt)) => 0
   | (TLit(LBool), TLit(LBool)) => 0
