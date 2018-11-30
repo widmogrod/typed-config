@@ -11,8 +11,8 @@ type expression =
 
 module TypeSet = Set.Make(TT);
 
-type scheme =
-  | Scheme(list(string), TT.t);
+/* type scheme = */
+/* | Scheme(list(string), TT.t); */
 
 type envType = StringMap.t(TT.t);
 
