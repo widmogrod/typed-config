@@ -32,26 +32,39 @@ let infereKeyType = (env: envType, key: string) =>
     None,
   );
 
+type type_error =
+  | TypeCheckNotImplemented(expression, TT.t)
+  | RegexpDoesNotMatchValue(string, string);
+
+exception Error(type_error);
+
+let print_error = e =>
+  switch (e) {
+  | TypeCheckNotImplemented(_, t) =>
+    Printf.printf("Unknow expression type. %s", showType(t))
+  | RegexpDoesNotMatchValue(pattern, value) =>
+    Printf.printf("Regexp=%s does not match value = %s", pattern, value)
+  };
+
 let rec doesValueMatchType = (v: expression, t: TT.t) =>
   switch (v, t) {
   | (_, TDefined(_, t)) => doesValueMatchType(v, t)
   | (ETrue, TLit(LBool)) => true
   | (EFalse, TLit(LBool)) => true
   | (EString(_), TLit(LString)) => true
-  | (EString(path), TIO) => Node.Fs.existsSync(path)
-  | (EString(pass), TPassword) => String.length(pass) > 5
+  | (EString(path), TIO) =>
+    /** TODO Make it to exception or Either type */ Node.Fs.existsSync(path)
+  | (EString(pass), TPassword) =>
+    /** TODO implement it properly */ String.length(pass) > 5
   | (EString(str), TConst(expected)) => str == expected
-  | (EString(str), TRegexp(regexp)) =>
-    if (Js.Re.(test(str, fromString(regexp)))) {
+  | (EString(str), TRegexp(pattern)) =>
+    if (Js.Re.(test(str, fromString(pattern)))) {
       true;
     } else {
-      Js.log3({|value does not match type|}, str, regexp);
-      false;
+      raise(Error(RegexpDoesNotMatchValue(pattern, str)));
     }
   | (_, TSum(a, b)) => doesValueMatchType(v, a) || doesValueMatchType(v, b)
-  | _ =>
-    Js.log3({|unknown type matching|}, v, showType(t));
-    false;
+  | _ => raise(Error(TypeCheckNotImplemented(v, t)))
   };
 
 let rec typeInference = (env: envType, e: expression) =>
