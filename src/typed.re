@@ -34,16 +34,18 @@ let infereKeyType = (env: envType, key: string) =>
 
 type type_error =
   | TypeCheckNotImplemented(expression, TT.t)
-  | RegexpDoesNotMatchValue(string, string);
+  | RegexpDoesNotMatchValue(string, string)
+  | IONotExists(string);
 
 exception Error(type_error);
 
-let print_error = e =>
+let showError = e =>
   switch (e) {
   | TypeCheckNotImplemented(_, t) =>
-    Printf.printf("Unknow expression type. %s", showType(t))
+    Printf.sprintf("Unknow expression type. %s", showType(t))
   | RegexpDoesNotMatchValue(pattern, value) =>
-    Printf.printf("Regexp=%s does not match value = %s", pattern, value)
+    Printf.sprintf("Regexp=%s does not match value = %s", pattern, value)
+  | IONotExists(path) => Printf.sprintf("IO does not exists = %s", path)
   };
 
 let rec doesValueMatchType = (v: expression, t: TT.t) =>
@@ -53,7 +55,9 @@ let rec doesValueMatchType = (v: expression, t: TT.t) =>
   | (EFalse, TLit(LBool)) => true
   | (EString(_), TLit(LString)) => true
   | (EString(path), TIO) =>
-    /** TODO Make it to exception or Either type */ Node.Fs.existsSync(path)
+    /** TODO Make it to exception or Either type */
+    (Node.Fs.existsSync(path) ? true : raise(Error(IONotExists(path))))
+
   | (EString(pass), TPassword) =>
     /** TODO implement it properly */ String.length(pass) > 5
   | (EString(str), TConst(expected)) => str == expected
