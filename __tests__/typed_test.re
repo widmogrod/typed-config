@@ -110,10 +110,6 @@ let e9 =
   ]);
 let r9 = {|[] of sum [string, sum [bool, {icon_path = _path of io}]]|};
 
-/* let e10 =
-     EObject(StringMap.(empty |> add("icon_path", EString("./some-rubish"))));
-   let r10 = {|"Invalid type: file not exists"|}; */
-
 let m1 =
   EObject(
     StringMap.(
@@ -135,6 +131,13 @@ let r11 = {|[] of sum [{icon_path = _path of io}, {market_enabled = _enabled of 
 let e12 = EArray([m2, m3, m4]);
 let r12 = {|[] of sum [{market_enabled = _enabled of bool}, {market_enabled = _enabled of boolusername_enabled = _enabled of bool}]|};
 
+let e10 =
+  EObject(StringMap.(empty |> add("icon_path", EString("./some-rubish"))));
+let r10 = Error(IONotExists("./some-rubish"));
+
+/* let e13 = EObject(StringMap.(empty |> add("postgres_url", EFalse)));
+   let r13 = Error(TypeCheckNotImplemented(e13, StringMap.find("_url", env)))s; */
+
 let () =
   testAll(
     "Typed.typeInference",
@@ -154,3 +157,12 @@ let () =
     ((expr, xa)) =>
     Expect.(typeInference(env, expr) |> showType |> expect |> toBe(xa))
   );
+testAll(
+  "Typed.typeInference error",
+  [(e10, r10)],
+  ((expr, exc)) => {
+    let subject = () => typeInference(env, expr);
+
+    Expect.(expect(subject) |> toThrowException(exc));
+  },
+);
