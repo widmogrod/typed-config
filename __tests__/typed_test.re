@@ -138,7 +138,12 @@ let r10 = Error(IONotExists("./some-rubish"));
 /* let e13 = EObject(StringMap.(empty |> add("postgres_url", EFalse)));
    let r13 = Error(TypeCheckNotImplemented(e13, StringMap.find("_url", env)))s; */
 
-let () =
+let a1 = typeInference(env, e11);
+let a2 = typeInference(env, e11);
+
+let () = {
+  Expect.(TT.compare(a1, a2) |> expect |> toBe(0));
+
   testAll(
     "Typed.typeInference",
     [
@@ -157,12 +162,13 @@ let () =
     ((expr, xa)) =>
     Expect.(typeInference(env, expr) |> showType |> expect |> toBe(xa))
   );
-testAll(
-  "Typed.typeInference error",
-  [(e10, r10)],
-  ((expr, exc)) => {
-    let subject = () => typeInference(env, expr);
+  testAll(
+    "Typed.typeInference error",
+    [(e10, r10)],
+    ((expr, exc)) => {
+      let subject = () => typeInference(env, expr);
 
-    Expect.(expect(subject) |> toThrowException(exc));
-  },
-);
+      Expect.(expect(subject) |> toThrowException(exc));
+    },
+  );
+};
