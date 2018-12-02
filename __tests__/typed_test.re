@@ -142,6 +142,9 @@ let a1 = typeInference(env, e11);
 let a2 = typeInference(env, e11);
 
 let () = {
+  /** TODO:
+- humman readable and actionable errors
+- compare one config to another */
   Expect.(TT.compare(a1, a2) |> expect |> toBe(0));
 
   testAll(
