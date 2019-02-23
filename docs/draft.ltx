@@ -1,0 +1,334 @@
+% XeLaTeX can use any Mac OS X font. See the setromanfont command below.
+% Input to XeLaTeX is full Unicode, so Unicode characters can be typed directly into the source.
+
+% The next lines tell TeXShop to typeset with xelatex, and to open and save the source with Unicode encoding.
+
+
+%!TEX TS-program = sepdflatexmk
+%!TEX TS-parameter = --shell-escape -shell-escape
+%!TEX encoding = UTF-8 Unicode
+\documentclass{article}
+
+\usepackage{geometry}                % See geometry.pdf to learn the layout options. There are lots.
+\geometry{a4paper}                   % ... or a4paper or a5paper or ... 
+%\geometry{landscape}                % Activate for for rotated page geometry
+%\usepackage[parfill]{parskip}    % Activate to begin paragraphs with an empty line rather than an indent
+\usepackage{graphicx}
+\usepackage{amssymb}
+\usepackage{syntax}
+\usepackage{bussproofs}
+\usepackage{minted}
+
+% Will Robertson's fontspec.sty can be used to simplify font choices.
+% To experiment, open /Applications/Font Book to examine the fonts provided on Mac OS X,
+% and change "Hoefler Text" to any of these choices.
+
+%\usepackage{fontspec,xltxtra,xunicode}
+%\defaultfontfeatures{Mapping=tex-text}
+%\setromanfont[Mapping=tex-text]{Hoefler Text}
+%\setsansfont[Scale=MatchLowercase,Mapping=tex-text]{Gill Sans}
+%\setmonofont[Scale=MatchLowercase]{Andale Mono}
+
+\title{Introducing types to static configuration files }
+\author{Gabriel Habryn}
+%\date{}                                           % Activate to display a given date or no date
+\newcommand{\necc}{\ensuremath{\mathbin{\Box}}}
+\begin{document}
+\maketitle
+
+% For many users, the previous commands will be enough.
+% If you want to directly input Unicode, add an Input Menu or Keyboard to the menu bar 
+% using the International Panel in System Preferences.
+% Unicode must be typeset using a font containing the appropriate characters.
+% Remove the comment signs below for examples.
+
+% \newfontfamily{\A}{Geeza Pro}
+% \newfontfamily{\H}[Scale=0.9]{Lucida Grande}
+% \newfontfamily{\J}[Scale=0.85]{Osaka}
+
+% Here are some multilingual Unicode fonts: this is Arabic text: {\A السلام عليكم}, this is Hebrew: {\H שלום}, 
+% and here's some Japanese: {\J 今日は}.
+
+\paragraph{Default settings}
+
+\setlength{\grammarparsep}{20pt plus 1pt minus 1pt} % increase separation between rules
+\setlength{\grammarindent}{12em} % increase separation between LHS/RHS 
+
+\paragraph{I'm fan of few concepts, self-documenting, single-source-of-truth, simple. Can I create extend configuration files with types ensuring those ideas?}
+
+\begin{itemize}
+\item Self-documenting - types and code are expressive enough that documentation is not needed
+\item Single source of truth - would enforce that there would be incentive to keep types for config files updated. Client library could be generated from it.
+\end{itemize}
+
+
+\begin{grammar}
+
+<object> ::= "{" <members> "}"
+
+<members> ::= <member>
+\alt <member> "," <members>
+
+<member> ::= <key> ":" <element>
+
+<key> ::= <string> "_" <type>
+\alt <type>
+
+<type> ::= <string>
+\end{grammar}
+
+\begin{minted}{json}
+{
+  "max_comment_length": 100,
+  "market_enabled": true,
+  "homepage_logo_path" : "./assets/img/logo.png",
+  "postgres_url": "postgres://dbuser:dbpass@database:5432/test?sslmode=disable"
+}
+\end{minted}
+
+Example errors.
+
+\begin{minted}{json}
+{
+  "market_enabled": 0
+}
+\end{minted}
+
+
+\begin{minted}{text}
+typedconf config.json
+
+Line | Problem
+
+2:   | "market_enabled": 0 
+                        ^^^ Expected type Bool but Num provided
+
+\end{minted}
+
+
+
+
+\begin{minted}{json}
+{
+  "market_enabled": true
+}
+\end{minted}
+
+\begin{minted}{ocaml}
+type enabled = Bool
+\end{minted}
+
+\begin{minted}{json}
+{
+  "postgres_url": "postgres://dbuser:dbpass@database:5432/test?sslmode=disable"
+}
+\end{minted}
+
+\begin{minted}{ocaml}
+type url = /^(([^:/?#]+):)?(//([^/?#]*))?([^?#]*)(?([^#]*))?(#(.*))?/
+\end{minted}
+
+\paragraph{You may notice that I started to mixing concepts - type with validation rule}
+
+\paragraph{What if I would use regex as a rule to deconstruct value to match it to specific structure of a configuration? that could be useful in case how value can be interepreted in project that use this value. This could be also used to code generation}
+
+\begin{minted}{ocaml}
+type url' = {
+  schema: String, 
+  host: String, 
+  user: String, 
+  pass: String
+}
+\end{minted}
+
+\paragraph{What IF I could verify whenever file provided in configuration exists}
+\begin{minted}{json}
+{
+  "homepage_logo_path" : "./assets/img/logo.png"
+}
+\end{minted}
+\begin{minted}{ocaml}
+type path = FileReadIO
+\end{minted}
+
+\paragraph{Can type verify whenever file exists? does it makes sense?
+Can type depend on function? that way I could define operations that type can do...?}
+
+\paragraph{Another example. Variants}
+\begin{minted}{json}
+{
+  "deploy": {
+    "instances": 1
+  }
+}
+\end{minted}
+\begin{minted}{json}
+{
+  "deploy": {
+    "instances": "auto",
+    "auto-scaling": {
+      "cpu": {
+        "up_percent": "80%",
+        "down_percent": "50%"
+      }
+    }
+  }
+}
+\end{minted}
+
+\begin{minted}{ocaml}
+type deploy 
+  = FixedInstances{instances=Nat} 
+  | Autoscaling{instances="auto", auto-scaling: {...}}
+\end{minted}
+
+What if JSON, YAML would be a syntactic sugar, which can enable usage of functions $\lambda$ ?
+
+\begin{minted}{json}
+{
+  "popular_blogs": "map (+1) [1,2,3]"
+}
+\end{minted}
+
+Questions to answer
+\begin{itemize}
+\item What is relation between type and IO?
+\begin{itemize}
+  \item F has data providers
+  \item Maybe I'm mixing to many things together, and I should separate type checking and type meaning
+\end{itemize}
+\item What is relation between dependent types? eg. type match _url = Regexp([a-z]+://[a-z])
+  \begin{itemize}
+    \item maybe I need to have a type that is more specialise?
+  \end{itemize}
+ \item Why languages don't have formal type system description with repository?
+  \begin{itemize}
+    \item because working with latex sucks!
+    \item big set of rules may be unmanageable
+    \item maybe because is something "new"
+  \end{itemize}
+  \item don't start with Type Theory - start with type systems - COREspondence
+  \item type rules showed me that as with Specification - I may notice some inconsistencies,...
+  \item beauty of pattern matching
+\end{itemize}
+
+
+\pagebreak
+\begin{grammar}
+
+<expr>  ::= <number> | <sum> | <true> | <false>
+
+<number>   ::= <digit> | <number><digit>
+
+<digit>    ::= "0" |  "1" |  "2" |  "3" |  "4" |  "5" |  "6" |  "7" |  "8" |  "9"
+
+<sum> ::= <number> "+" <number>
+
+<true>     ::= "true"
+
+<false>    ::= "false"
+\end{grammar}
+\pagebreak
+
+\begin{prooftree}
+    \AxiomC{$ \_ \vdash \_ $}    
+\end{prooftree}
+\begin{prooftree}
+    \AxiomC{$ \_ \vdash e : A $}    
+\end{prooftree}
+\begin{prooftree}
+    \AxiomC{$ \_ \vdash 1 + 2 : Nat $}    
+\end{prooftree}
+\begin{prooftree}
+    \AxiomC{$ \_ \vdash true : Nat $}    
+\end{prooftree}
+
+\begin{prooftree}
+    \AxiomC{$ \emptyset, x_1: A_1, ... x_n: A_n  \vdash \_ $}    
+\end{prooftree}
+\begin{prooftree}
+    \AxiomC{$ \Gamma  \vdash \_ $}    
+\end{prooftree}
+\begin{prooftree}
+    \AxiomC{$ \Gamma  \vdash \diamond $}    
+\end{prooftree}
+
+\begin{prooftree}
+    \AxiomC{$ \Gamma \vdash e : A $}    
+\end{prooftree}
+\begin{prooftree}
+    \AxiomC{$ \Gamma \vdash 1 + 2 : Nat $}    
+\end{prooftree}
+\begin{prooftree}
+    \AxiomC{$ \Gamma \vdash true : Bool $}    
+\end{prooftree}
+
+\pagebreak
+
+\begin{prooftree}
+    \alwaysNoLine
+    \AxiomC{$(RuleName) \  (annotations)$}
+    \UnaryInfC{}
+    \UnaryInfC{$ \Gamma_1 \vdash \_ $}
+    \alwaysSingleLine
+    \AxiomC{$ \Gamma_2 \vdash \_ $} 
+    \BinaryInfC{$ \Gamma \vdash \_ $}
+\end{prooftree}
+\pagebreak
+
+
+
+\begin{prooftree}
+    \AxiomC{$ \Gamma \vdash M: Bool$}
+    \AxiomC{$ \Gamma \vdash N_1: A$} 
+    \AxiomC{$ \Gamma \vdash N_2: A$} 
+    \TrinaryInfC{$ \Gamma \vdash (if_A \ M \ then \ N_1 \ else \ N_2): A$}
+\end{prooftree}
+
+
+
+
+\begin{center}
+    \alwaysNoLine
+    \AxiomC{$(Type \ Schema)$}
+    \UnaryInfC{}
+    \UnaryInfC{$\Gamma \vdash \diamond $}
+    \alwaysSingleLine
+    \UnaryInfC{$ \Gamma \vdash Schema$}
+    \DisplayProof
+    \qquad
+    \alwaysNoLine
+    \AxiomC{$(Val \ s) \ (s = \{https, http, ftp,...\})$}
+    \UnaryInfC{}
+    \UnaryInfC{$ \Gamma \vdash Schema$}
+    \alwaysSingleLine
+    \UnaryInfC{$ \Gamma \vdash s : Schema$}
+   \DisplayProof
+\end{center}
+
+\begin{center}
+   \alwaysNoLine
+    \AxiomC{$(Type \ Hostname)$}
+    \UnaryInfC{}
+    \UnaryInfC{$\Gamma \vdash \diamond $}
+    \alwaysSingleLine
+    \UnaryInfC{$ \Gamma \vdash Hostname$}
+    \DisplayProof
+    \qquad
+    \alwaysNoLine
+    \AxiomC{$(Val \ h) \ (h = [a-z])$}
+    \UnaryInfC{}
+    \UnaryInfC{$ \Gamma \vdash Hostname$}
+    \alwaysSingleLine
+    \UnaryInfC{$ \Gamma \vdash h : Hostname$}
+  \DisplayProof
+\end{center}
+
+\begin{prooftree}
+    \AxiomC{$ \Gamma \vdash M_s: Schema$}
+    \AxiomC{$ \Gamma \vdash N_1: A$} 
+    \AxiomC{$ \Gamma \vdash N_2: A$} 
+    \TrinaryInfC{$ \Gamma \vdash (M_s :// hostname / path ? params): URL$}
+\end{prooftree}
+
+\end{document}  
