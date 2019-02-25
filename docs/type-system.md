@@ -100,5 +100,41 @@ TODO
             | y:B then b₂) : B
 
 
+#### Record Type
+
+    Γ ⊢ A₁  ...  Γ ⊢ A𝚗
+    -------------------------- (Type Record) (l𝚒 distinct)
+    Γ ⊢ {l₁: A₁, ..., l𝚗: A𝚗}
+
+    Γ ⊢ a₁: A₁  ...  Γ ⊢ a𝚗:A𝚗
+    ----------------------------------------------------- (Val record)
+    Γ ⊢ {l₁=a₁, ..., l𝚗=a𝚗} : {l₁: A₁, ..., l𝚗: A𝚗}
+
+
+## Example of type derivation
+### Bool
+
+    Γ ⊢ ♢
+    --------------- by (Val true)
+    Γ ⊢ true: Bool
+    ---------------------------------------------------- by (Val record)
+    Γ ⊢ {market_enabled: true} : {market_enabled: Bool}
+
+### TODO: String
+
+    TODO string type & term [?]
+    ---------------
+    Γ ⊢ "<string>": String
+    -------------------------------------------------------
+    Γ ⊢ {market_name: "some name"} : {market_name: String}
+
+### Type reconstruction algorithm
+JSON doesn't have types.
+To enable posibility to run type checker algorithm on type-less JSON file, then
+- Type of typeless JSON file must be provided
+- Type of typeless JSON file must be reconstructed
+
+TODO.
+
 ## Refereneces
 - [A] https://www.json.org
