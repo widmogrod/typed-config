@@ -46,6 +46,8 @@ a,b ::=                         terms
 
 #### Nat type
 
+    TODO
+
 #### List type constructor (todo)
 
     TODO
