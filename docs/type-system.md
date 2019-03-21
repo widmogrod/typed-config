@@ -50,8 +50,54 @@ a,b ::=                         terms
 #### Nat type
 
     Γ ⊢ ♢
-    -------- (Type Nat) (n = 1,2,3,4,..)
+    -------- (Val n) (n = 1,2,3,4,..)
     Γ ⊢ n : Nat
+
+    ----- dependent natural number ----------
+
+        Γ ⊢ ♢
+        ----------------------------- (Val <=)
+        Γ ⊢ i <= n
+
+        Γ ⊢ ♢
+        ----------------------- (Type alias ;))
+        Γ ⊢ Nat : Nat_infinity
+
+        Γ, i : Nat, n : Nat ⊢ i <= n
+        ----------------------------- (Type Nat_n)
+        Γ ⊢ Nat_n(i) : Nat -> i <= n
+
+        Γ ⊢ Nat_n(i)
+        ------------- (Val Nat_n) (i = 0, 1, 2, 3)
+        Γ ⊢ i : Nat_n
+
+    ------ experiment below ------
+
+    Γ ⊢ a : A, B : A -> Type
+
+    transitive : a < b and b < c then a < c
+
+        Γ ⊢ A < B    Γ ⊢ B < C
+        -----------------------
+        Γ ⊢ A < C
+
+    indepotent  : f(f(x)) == f(x) 
+
+        Γ ⊢ 
+        -----------------------
+        Γ ⊢ 
+
+    commutative : a + b = b + a
+
+        Γ ⊢ 
+        -----------------------
+        Γ ⊢ 
+
+    associative : (a + b) + c = a + (b + c)
+
+        Γ ⊢ 
+        -----------------------
+        Γ ⊢ 
 
 #### List type constructor (todo)
 
