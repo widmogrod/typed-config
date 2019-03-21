@@ -8,7 +8,7 @@ type    ::= string
 value   ::= number | string
 string  ::= "a" | "b", ...
 number  ::= digit | digit digit
-digit   ::= 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 
+digit   ::= 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9
 
 A,B ::=                         types
     Bool
@@ -16,7 +16,10 @@ A,B ::=                         types
 
 a,b ::=                         terms
     value
-    
+
+Γ ⊢ ♢       Γ is well formed environment
+Γ ⊢ A       A is a type in well formed environment
+Γ ⊢ a:A     a is a tern of type A in well formed environment
 
 ### Atomic types
 
@@ -46,7 +49,9 @@ a,b ::=                         terms
 
 #### Nat type
 
-    TODO
+    Γ ⊢ ♢
+    -------- (Type Nat) (n = 1,2,3,4,..)
+    Γ ⊢ n : Nat
 
 #### List type constructor (todo)
 
@@ -56,12 +61,12 @@ a,b ::=                         terms
     --------- (Type List)
     Γ ⊢ List
 
-    Γ ⊢ ♢  Γ ⊢ a: A 
+    Γ ⊢ ♢  Γ ⊢ a: A
     ----------------- (Val list)
-    Γ ⊢ [a] : List 
+    Γ ⊢ [a] : List
 
     -----------------
-    Γ ⊢ [] : List 
+    Γ ⊢ [] : List
 
 #### Record type constructor - named tuples
 
