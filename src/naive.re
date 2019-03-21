@@ -45,11 +45,23 @@ let rec typeCheck = (e: expr, t: typ) =>
     }
   /* (Val Nat_n) rule */
   | (ENum(i), TDependentNat(ENum(n))) =>
-    if (i <= n) {
-      t;
-    } else {
-      raise(Error(OutOfBoundOfDependentNat(i, n)));
-    }
+    /** TODO: TDependant to implement (Type Nat_n) rule
+      plus implement function application thanks to that
+      rule (Type Nat_n) could look like this:
+      | (ENum(i), TDependentNat(ENum(n), TAbs(n))) =>
+        e1 = TApp(TAbs(n), ENum(i))
+        typeCheck(e1, TBool)
+        !!! Although - TBool must be true?
+        How to solve it?
+
+      */
+    (
+      if (i <= n) {
+        t;
+      } else {
+        raise(Error(OutOfBoundOfDependentNat(i, n)));
+      }
+    )
   /* Typing error */
   | _ => raise(Error(NoTypingRuleFor(e, t)))
   };
